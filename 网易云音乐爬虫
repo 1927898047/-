@@ -1,0 +1,36 @@
+import requests
+import json#数据格式交换
+import re#正则表达式的库
+from bs4 import BeautifulSoup                     #html解析器
+singer_url = 'http://music.163.com/artist?id=' + str(15290)     #网易云歌手url(去掉其中的#字符)
+web_data = requests.get(singer_url)               #请求发送
+soup = BeautifulSoup(web_data.text, 'lxml')       #解析网页
+singer_name = soup.select("#artist-name")
+r = soup.find('ul', {'class': 'f-hide'}).find_all('a')#bs4中findall函数，用于分类网页不同的标签,<h><a>等等
+r = (list(r))
+music_id_set=[]
+for each in r:
+    song_name = each.text                 # print(each.text)
+    song_id = each.attrs["href"]
+    music_id_set.append(song_id[9:])
+print(music_id_set)                          # 打印歌手的所有歌曲ID
+lrc_url = 'http://music.163.com/api/song/media?id=26562731'#歌词的url
+header= {'Referer':'https://segmentfault.com/a/1190000014431323',
+           'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.146 Safari/537.36'#每个爬虫必备的伪装
+          }                               #请求头设置，防止被反爬机制识别
+lyric=requests.get(lrc_url,headers=header)
+json_obj = lyric.text                     #读取网页内容
+j = json.loads(json_obj)                  #转换为字典格式
+del j["code"]                             #将字典最后一个key为code的键删除
+for key,value in j.items():               #将字典打印为歌词格式
+    list_=('{key}:{value}'.format(key = key, value = value))#字典转换为列表
+out = re.sub('\[.*?\]', '', list_)          #正则表达式出去中括号
+for i in out:
+    if i=='\n':
+        i=i.strip('\n')                     #删除歌词中不必要的空行
+print(out)
+
+
+
+
+
